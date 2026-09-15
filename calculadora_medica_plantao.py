@@ -1,3 +1,7 @@
+# 🩺 CALCULADORA MÉDICA INTERATIVA DE PLANTÃO (EDITION STREAMLIT 2026 - EXPANDIDA)
+# Desenvolvida para consulta rápida em Plantões Médicos (UBS, UPA, PS, Enfermaria, UTI)
+# Compatível com Streamlit Community Cloud e Embed via Notion
+
 import streamlit as st
 import math
 
@@ -8,7 +12,7 @@ st.set_page_config(
 )
 
 st.title("🩺 Calculadora Médica Prática de Plantão (2026)")
-st.caption("Ferramenta clínica baseada nas Diretrizes SBD 2026, SBC, GINA 2026, GOLD 2026, Surviving Sepsis Campaign (SSC 2024/2026) e Ministério da Saúde.")
+st.caption("Ferramenta clínica baseada nas Diretrizes SBD 2026, SBC 2025/2026, GINA 2026, GOLD 2026, ESETT e Ministério da Saúde.")
 
 st.sidebar.header("📌 Módulos de Cálculo")
 modulo = st.sidebar.radio(
@@ -17,10 +21,16 @@ modulo = st.sidebar.radio(
         "1. Cetoacidose (CAD) & Estado Hiperosmolar (SHH)",
         "2. Infusão de Drogas Vasoativas (BIC)",
         "3. Função Renal (CKD-EPI 2021)",
-        "4. Doses Pediátricas por Peso",
-        "5. Escores Críticos (NEWS2, CURB-65 & qSOFA)",
-        "6. Dengue - Manejo Volêmico (MS)",
-        "7. Queimaduras (Regra de Parkland)"
+        "4. Anestésicos Locais & Dose Máxima (Sutura)",
+        "5. Correção de Hiponatremia (Adrogue & SALSA)",
+        "6. Escore NIHSS (AVC Isquêmico)",
+        "7. Risco Coronariano (HEART & TIMI Score)",
+        "8. Gasometria Arterial & Ácido-Base",
+        "9. Insulinoterapia Hospitalar (SBD 2026)",
+        "10. Doses Pediátricas por Peso",
+        "11. Escores Críticos (CURB-65 & qSOFA)",
+        "12. Dengue - Manejo Volêmico (MS)",
+        "13. Queimaduras (Regra de Parkland)"
     ]
 )
 
@@ -79,7 +89,7 @@ elif modulo == "2. Infusão de Drogas Vasoativas (BIC)":
     
     drogas = st.selectbox(
         "Selecione a medicação:",
-        ["Noradrenalina", "Nitroglicerina (Tridil)", "Nitroprussiato de Sódio (Nipride)", "Dopamina"]
+        ["Noradrenalina", "Nitroglicerina (Tridil)", "Nitroprussiato de Sódio (Nipride)", "Dopamina", "Dobutamina"]
     )
     
     peso = st.number_input("Peso do Paciente (kg)", min_value=30.0, max_value=250.0, value=70.0, step=1.0)
@@ -132,6 +142,14 @@ elif modulo == "2. Infusão de Drogas Vasoativas (BIC)":
         vazao_mlh = (dose_target * peso * 60) / conc
         st.success(f"📌 **Vazão na Bomba de Infusão:** **{vazao_mlh:.1f} mL/h**")
 
+    elif drogas == "Dobutamina":
+        st.subheader("Dobutamina (Ampola de 250 mg / 20 mL)")
+        st.write("Diluição padrão: 1 ampola (250 mg) + 230 mL SG5% (Total 250 mL -> 1000 mcg/mL)")
+        conc = 1000.0
+        dose_target = st.slider("Dose desejada (mcg/kg/min)", min_value=2.5, max_value=20.0, value=5.0, step=0.5)
+        vazao_mlh = (dose_target * peso * 60) / conc
+        st.success(f"📌 **Vazão na Bomba de Infusão:** **{vazao_mlh:.1f} mL/h**")
+
 # -----------------------------------------------------------------------------
 # MÓDULO 3: CKD-EPI 2021
 # -----------------------------------------------------------------------------
@@ -180,9 +198,334 @@ elif modulo == "3. Função Renal (CKD-EPI 2021)":
         st.warning("⚠️ **TFGe < 20 mL/min**: iSGLT2 não deve ser iniciado (manter se já em uso conforme diretrizes renais).")
 
 # -----------------------------------------------------------------------------
-# MÓDULO 4: DOSES PEDIÁTRICAS
+# MÓDULO 4: ANESTÉSICOS LOCAIS (NOVO)
 # -----------------------------------------------------------------------------
-elif modulo == "4. Doses Pediátricas por Peso":
+elif modulo == "4. Anestésicos Locais & Dose Máxima (Sutura)":
+    st.header("🩹 Dose Máxima de Anestésicos Locais para Suturas / Procedimentos")
+    st.caption("Prevenção da Síndrome de Intoxicação Sistêmica por Anestésicos Locais (LAST)")
+    
+    col1, col2 = st.columns(2)
+    with col1:
+        peso_anest = st.number_input("Peso do Paciente (kg)", min_value=5.0, max_value=200.0, value=70.0, step=1.0)
+    with col2:
+        anestesico = st.selectbox(
+            "Anestésico Local & Apresentação:",
+            [
+                "Lidocaína 1% SEM Epinefrina (10 mg/mL) - Máx 4,5 mg/kg",
+                "Lidocaína 2% SEM Epinefrina (20 mg/mL) - Máx 4,5 mg/kg",
+                "Lidocaína 1% COM Epinefrina (10 mg/mL) - Máx 7,0 mg/kg",
+                "Lidocaína 2% COM Epinefrina (20 mg/mL) - Máx 7,0 mg/kg",
+                "Bupivacaína 0,5% SEM Epinefrina (5 mg/mL) - Máx 2,0 mg/kg",
+                "Bupivacaína 0,5% COM Epinefrina (5 mg/mL) - Máx 2,5 mg/kg"
+            ]
+        )
+        
+    if "Lidocaína 1% SEM" in anestesico:
+        dose_mg_kg = 4.5
+        conc_mg_ml = 10.0
+    elif "Lidocaína 2% SEM" in anestesico:
+        dose_mg_kg = 4.5
+        conc_mg_ml = 20.0
+    elif "Lidocaína 1% COM" in anestesico:
+        dose_mg_kg = 7.0
+        conc_mg_ml = 10.0
+    elif "Lidocaína 2% COM" in anestesico:
+        dose_mg_kg = 7.0
+        conc_mg_ml = 20.0
+    elif "Bupivacaína 0,5% SEM" in anestesico:
+        dose_mg_kg = 2.0
+        conc_mg_ml = 5.0
+    else:
+        dose_mg_kg = 2.5
+        conc_mg_ml = 5.0
+        
+    dose_total_mg = peso_anest * dose_mg_kg
+    vol_max_ml = dose_total_mg / conc_mg_ml
+    
+    st.markdown("---")
+    r1, r2, r3 = st.columns(3)
+    r1.metric("Dose Máxima por Peso", f"{dose_mg_kg} mg/kg")
+    r2.metric("Dose Máxima Total (mg)", f"{dose_total_mg:.0f} mg")
+    r3.metric("Volume Máximo em mL", f"{vol_max_ml:.1f} mL")
+    
+    st.info(f"💡 **Orientações do Plantão:** Para um paciente de **{peso_anest} kg**, o limite de segurança é de **{vol_max_ml:.1f} mL** do anestésico selecionado. Sempre realizar aspiração prévia antes de injetar para evitar injeção intravascular inadvertida.")
+
+# -----------------------------------------------------------------------------
+# MÓDULO 5: ADROGUE & SALSA (HIPONATREMIA) (NOVO)
+# -----------------------------------------------------------------------------
+elif modulo == "5. Correção de Hiponatremia (Adrogue & SALSA)":
+    st.header("🧂 Manejo Rápido da Hiponatremia & Fórmula de Adrogué-Madias")
+    
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        sexo_h = st.radio("Sexo e Perfil", ["Homem Adulto", "Mulher Adulta / Homem Idoso", "Mulher Idosa", "Criança"])
+        peso_h = st.number_input("Peso (kg)", min_value=10.0, max_value=200.0, value=70.0)
+    with col2:
+        na_paciente = st.number_input("Sódio Atual do Paciente (Na+) (mEq/L)", min_value=90.0, max_value=150.0, value=115.0)
+        na_desejado = st.number_input("Sódio Alvo Desejado (mEq/L)", min_value=95.0, max_value=150.0, value=121.0)
+    with col3:
+        solucao = st.selectbox(
+            "Solução de Infusão:",
+            [
+                "Salina 3% (513 mEq/L Na+)",
+                "Soro Fisiológico 0,9% (154 mEq/L Na+)",
+                "Ringer Lactato (130 mEq/L Na+)"
+            ]
+        )
+
+    # Cálculo da Água Corporal Total (ACT)
+    if sexo_h == "Homem Adulto":
+        f_act = 0.6
+    elif sexo_h == "Mulher Adulta / Homem Idoso":
+        f_act = 0.5
+    elif sexo_h == "Mulher Idosa":
+        f_act = 0.45
+    else:
+        f_act = 0.6
+        
+    act = peso_h * f_act
+    
+    if "3%" in solucao:
+        na_solucao = 513.0
+    elif "0,9%" in solucao:
+        na_solucao = 154.0
+    else:
+        na_solucao = 130.0
+        
+    # Fórmula Adrogué-Madias: Delta Na por 1L = (Na_solucao - Na_paciente) / (ACT + 1)
+    delta_na_1L = (na_solucao - na_paciente) / (act + 1.0)
+    variacao_desejada = na_desejado - na_paciente
+    
+    if delta_na_1L > 0:
+        vol_necessario_l = variacao_desejada / delta_na_1L
+        vol_necessario_ml = vol_necessario_l * 1000.0
+    else:
+        vol_necessario_ml = 0.0
+
+    st.markdown("---")
+    st.subheader("📊 Cálculo de Reposição Continuada (Adrogué-Madias):")
+    c1, c2, c3 = st.columns(3)
+    c1.metric("Água Corporal Total (ACT)", f"{act:.1f} L")
+    c2.metric("Elevação de Na+ por 1L de Soro", f"+{delta_na_1L:.2f} mEq/L")
+    c3.metric(f"Volume de {solucao} para +{variacao_desejada:.0f} mEq/L", f"{vol_necessario_ml:.0f} mL")
+
+    st.markdown("### 🚨 Protocolo de Emergência (Estudo SALSA - Encefalopatia Hiponatrêmica):")
+    st.error("• **Sintomas Graves (Convulsão, Coma, Torpor):** Administrar **Bolus Intermitente Rápido de Salina 3% (100 a 150 mL em 10-20 min)**.")
+    st.write("• Pode repetir 1 a 2 vezes se mantiver sintomas graves ou até elevar Na+ em 4-6 mEq/L nas primeiras 1-2h.")
+    st.warning("🛑 **LIMITE DE SEGURANÇA MÁXIMO:** **NÃO elevar mais de 8 a 10 mEq/L nas primeiras 24 horas** (ou < 6-8 mEq/L em pacientes de alto risco) para evitar a **Síndrome de Desmielinização Osmótica (Mielinólise Pontina)**.")
+    st.info("💡 **Preparo Caseiro de SF 3% (500 mL):** 445 mL de Soro Fisiológico 0,9% + 55 mL de NaCl 20%.")
+
+# -----------------------------------------------------------------------------
+# MÓDULO 6: NIHSS (NOVO)
+# -----------------------------------------------------------------------------
+elif modulo == "6. Escore NIHSS (AVC Isquêmico)":
+    st.header("🧠 Escore NIHSS Completo (Escala de AVC do NIH)")
+    st.caption("Avaliador de gravidade do AVC Isquêmico para decisão de Trombólise com Alteplase")
+    
+    q1 = st.selectbox("1a. Nível de Consciência:", [0, 1, 2, 3], format_func=lambda x: f"{x} - " + ["Alerta", "Somnolento", "Torporoso/Estuporoso", "Coma/Riflexia"][x])
+    q2 = st.selectbox("1b. Perguntas (Mês atual e Idade):", [0, 1, 2], format_func=lambda x: f"{x} - " + ["Acerta ambas", "Acerta uma", "Erra ambas"][x])
+    q3 = st.selectbox("1c. Comandos (Abrir/fechar olhos, fechar mão):", [0, 1, 2], format_func=lambda x: f"{x} - " + ["Obedece ambos", "Obedece um", "Erra ambos"][x])
+    q4 = st.selectbox("2. Olhar Conjugado:", [0, 1, 2], format_func=lambda x: f"{x} - " + ["Normal", "Paresia parcial", "Desvio forçado/Paresia total"][x])
+    q5 = st.selectbox("3. Campos Visuais:", [0, 1, 2, 3], format_func=lambda x: f"{x} - " + ["Sem perda", "Hemianopsia parcial", "Hemianopsia completa", "Cegueira bilateral"][x])
+    q6 = st.selectbox("4. Paralisia Facial:", [0, 1, 2, 3], format_func=lambda x: f"{x} - " + ["Normal", "Paresia mínima", "Paralisia parcial", "Paralisia completa"][x])
+    q7 = st.selectbox("5. Motor Membro Superior (D e E):", [0, 1, 2, 3, 4], format_func=lambda x: f"{x} - " + ["Sem queda (10s)", "Queda sutil sem tocar leito", "Queda toca leito", "Sem força contra gravidade", "Sem movimento"][x])
+    q8 = st.selectbox("6. Motor Membro Inferior (D e E):", [0, 1, 2, 3, 4], format_func=lambda x: f"{x} - " + ["Sem queda (5s)", "Queda sutil sem tocar leito", "Queda toca leito", "Sem força contra gravidade", "Sem movimento"][x])
+    q9 = st.selectbox("7. Ataxia Apendicular (Dismetria):", [0, 1, 2], format_func=lambda x: f"{x} - " + ["Ausente", "Presente em 1 membro", "Presente em 2 membros"][x])
+    q10 = st.selectbox("8. Sensibilidade (Estímulo doloroso):", [0, 1, 2], format_func=lambda x: f"{x} - " + ["Normal", "Perda leve/moderada", "Perda grave/Anestesia"][x])
+    q11 = st.selectbox("9. Melhor Linguagem (Afasia):", [0, 1, 2, 3], format_func=lambda x: f"{x} - " + ["Sem afasia", "Afasia leve/moderada", "Afasia grave", "Muto/Afasia global"][x])
+    q12 = st.selectbox("10. Disartria:", [0, 1, 2], format_func=lambda x: f"{x} - " + ["Normal", "Leve/moderada", "Grave/Anartria"][x])
+    q13 = st.selectbox("11. Extinção e Inatenção (Negligência):", [0, 1, 2], format_func=lambda x: f"{x} - " + ["Sem negligência", "Negligência parcial (1 modalidade)", "Negligência profunda (> 1 modalidade)"][x])
+    
+    nihss_total = sum([q1, q2, q3, q4, q5, q6, q7, q8, q9, q10, q11, q12, q13])
+    
+    st.markdown("---")
+    st.metric("Pontuação Total NIHSS", f"{nihss_total} pontos")
+    
+    if nihss_total == 0:
+        st.success("Exame neurológico normal.")
+    elif nihss_total <= 4:
+        st.info("AVC leve / Deficit mínimo. Avaliar se o déficit é incapacitante para indicar Trombólise.")
+    elif nihss_total <= 15:
+        st.warning("AVC moderado. Candidato a Trombólise se janela < 4h30 e sem contraindicações.")
+    elif nihss_total <= 25:
+        st.error("AVC moderadamente grave a grave. Indicada Trombólise e avaliação de Trombectomia Mecânica.")
+    else:
+        st.error("AVC muito grave (NIHSS > 25). Alto risco de transformação hemorrágica.")
+
+# -----------------------------------------------------------------------------
+# MÓDULO 7: RISCO CORONARIANO (HEART & TIMI) (NOVO)
+# -----------------------------------------------------------------------------
+elif modulo == "7. Risco Coronariano (HEART & TIMI Score)":
+    st.header("🫀 Escores de Risco para Síndrome Coronariana Aguda (SCA)")
+    
+    escore_tipo = st.radio("Selecione o Escore:", ["HEART Score (Dor Torácica no PS)", "TIMI Risk Score (SCA sem Supra)"])
+    
+    if escore_tipo == "HEART Score (Dor Torácica no PS)":
+        st.subheader("HEART Score para Estratificação no Pronto-Socorro")
+        
+        h = st.selectbox("H - História clínica:", [0, 1, 2], format_func=lambda x: ["0 - Pouco suspeita", "1 - Moderadamente suspeita", "2 - Altamente suspeita"][x])
+        e = st.selectbox("E - Eletrocardiograma (ECG):", [0, 1, 2], format_func=lambda x: ["0 - Normal", "1 - Alteração de repolarização não específica", "2 - Infradesnível de ST acentuado / Isquemia"][x])
+        a = st.selectbox("A - Idade (Age):", [0, 1, 2], format_func=lambda x: ["0 - < 45 anos", "1 - 45 a 64 anos", "2 - >= 65 anos"][x])
+        r = st.selectbox("R - Fatores de Risco (HAS, DM, DLP, Tabagismo, Obesidade, HF):", [0, 1, 2], format_func=lambda x: ["0 - Nenhum fator de risco", "1 - 1 ou 2 fatores de risco", "2 - >= 3 fatores de risco ou Doença Aterosclerótica Prévia"][x])
+        t = st.selectbox("T - Troponina inicial:", [0, 1, 2], format_func=lambda x: ["0 - Normal (<= limite)", "1 - 1 a 3x o limite superior", "2 - > 3x o limite superior"][x])
+        
+        heart_score = h + e + a + r + t
+        st.markdown(f"**Pontuação HEART Score:** **{heart_score} pontos**")
+        
+        if heart_score <= 3:
+            st.success("✅ **Baixo Risco (0 - 3 pontos):** Risco de MACE em 6 semanas < 2,5%. Candidato à alta hospitalar com acompanhamento ambulatorial.")
+        elif heart_score <= 6:
+            st.warning("⚠️ **Risco Intermediário (4 - 6 pontos):** Risco MACE ~ 12-20%. Observação, troponina seriada e ecocardiograma/estratificação pré-alta.")
+        else:
+            st.error("🚨 **Alto Risco (7 - 10 pontos):** Risco MACE > 50-65%. Internação em Unidade Coronariana / UTI e Cateterismo (ICP) de urgência.")
+
+    else:
+        st.subheader("TIMI Risk Score para SCA sem Supra de ST")
+        t1 = st.checkbox("Idade >= 65 anos")
+        t2 = st.checkbox(">= 3 Fatores de Risco para DAC (HAS, DM, DLP, Tabagismo, HF)")
+        t3 = st.checkbox("Estenose Coronariana Prévia >= 50%")
+        t4 = st.checkbox("Uso de AAS nos últimos 7 dias")
+        t5 = st.checkbox(">= 2 episódios de Angina nas últimas 24 horas")
+        t6 = st.checkbox("Infradesnível de ST >= 0,5 mm no ECG de entrada")
+        t7 = st.checkbox("Marcadores de Necrose Miocárdica Elevados (Troponina positiva)")
+        
+        timi_score = sum([t1, t2, t3, t4, t5, t6, t7])
+        st.markdown(f"**Pontuação TIMI Score:** **{timi_score} pontos**")
+        
+        if timi_score <= 2:
+            st.success("✅ **Baixo Risco (0 - 2 pontos):** Mortalidade / IAM em 14 dias ~ 5-8%. Estratégia conservadora inicial.")
+        elif timi_score <= 4:
+            st.warning("⚠️ **Risco Intermediário (3 - 4 pontos):** Mortalidade / IAM em 14 dias ~ 13-20%. Estratégia invasiva precoce (< 24h).")
+        else:
+            st.error("🚨 **Alto Risco (5 - 7 pontos):** Mortalidade / IAM em 14 dias ~ 26-41%. Estratégia invasiva de urgência.")
+
+# -----------------------------------------------------------------------------
+# MÓDULO 8: GASOMETRIA ARTERIAL (NOVO)
+# -----------------------------------------------------------------------------
+elif modulo == "8. Gasometria Arterial & Ácido-Base":
+    st.header("🫁 Interpretador de Gasometria Arterial & Resposta Compensatória")
+    
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        ph = st.number_input("pH Arterial", min_value=6.80, max_value=7.80, value=7.25, step=0.01)
+        pco2 = st.number_input("pCO2 (mmHg)", min_value=10.0, max_value=120.0, value=28.0, step=1.0)
+    with col2:
+        hco3_g = st.number_input("HCO3- (mEq/L)", min_value=2.0, max_value=60.0, value=12.0, step=1.0)
+        po2 = st.number_input("pO2 (mmHg)", min_value=20.0, max_value=500.0, value=85.0, step=1.0)
+    with col3:
+        sato2_g = st.number_input("SatO2 (%)", min_value=30.0, max_value=100.0, value=95.0, step=1.0)
+        fio2 = st.number_input("FiO2 fornecida (%)", min_value=21.0, max_value=100.0, value=21.0, step=1.0)
+
+    paO2_fio2 = po2 / (fio2 / 100.0)
+    
+    st.markdown("---")
+    st.subheader("📊 Raciocínio Diagnóstico:")
+    
+    # 1. Distúrbio Primário
+    if ph < 7.35:
+        estado_ph = "ACIDEMIA"
+    elif ph > 7.45:
+        estado_ph = "ALCALEMIA"
+    else:
+        estado_ph = "pH NORMAL (ou Distúrbio Misto Compensado)"
+        
+    st.write(f"• **Status do pH:** **{estado_ph}** ({ph:.2f})")
+    
+    if ph < 7.35:
+        if hco3_g < 22 and pco2 <= 40:
+            disturbio = "Acidose Metabólica"
+            pco2_esperada = (1.5 * hco3_g) + 8
+            st.error(f"🔴 **Distúrbio Primário:** {disturbio}")
+            st.info(f"💡 **Resposta Compensatória (Fórmula de Winter):** pCO2 esperada = **{pco2_esperada - 2:.1f} a {pco2_esperada + 2:.1f} mmHg**.")
+            if pco2 < pco2_esperada - 2:
+                st.warning("⚠️ pCO2 medida é MENOR que a esperada -> **Alcalose Respiratória Associada**.")
+            elif pco2 > pco2_esperada + 2:
+                st.warning("⚠️ pCO2 medida é MAIOR que a esperada -> **Acidose Respiratória Associada**.")
+            else:
+                st.success("✅ Resposta respiratória compensatória adequada.")
+                
+        elif pco2 > 45:
+            disturbio = "Acidose Respiratória"
+            st.error(f"🔴 **Distúrbio Primário:** {disturbio}")
+            st.info("💡 Na acidose respiratória aguda, espera-se elevação de 1 mEq/L de HCO3 para cada 10 mmHg de pCO2 acima de 40.")
+
+    elif ph > 7.45:
+        if hco3_g > 26:
+            disturbio = "Alcalose Metabólica"
+            pco2_esp = hco3_g + 15
+            st.error(f"🔵 **Distúrbio Primário:** {disturbio}")
+            st.info(f"💡 pCO2 esperada ≈ HCO3 + 15 = **{pco2_esp - 2:.1f} a {pco2_esp + 2:.1f} mmHg**.")
+        elif pco2 < 35:
+            disturbio = "Alcalose Respiratória"
+            st.error(f"🔵 **Distúrbio Primário:** {disturbio}")
+
+    # PaO2 / FiO2
+    st.write(f"• **Relação PaO2/FiO2:** **{paO2_fio2:.0f}**")
+    if paO2_fio2 < 200:
+        st.error("🚨 **Insuficiência Respiratória / SDRA Grave** (PaO2/FiO2 < 200). Indicada O2 alto fluxo ou VNI/IOT.")
+    elif paO2_fio2 < 300:
+        st.warning("⚠️ **Troca Gasosa Comprometida / SDRA Leve** (PaO2/FiO2 200-300).")
+
+# -----------------------------------------------------------------------------
+# MÓDULO 9: INSULINOTERAPIA HOSPITALAR (NOVO)
+# -----------------------------------------------------------------------------
+elif modulo == "9. Insulinoterapia Hospitalar (SBD 2026)":
+    st.header("💉 Prescrição de Insulinoterapia Hospitalar & Correção (SBD 2026)")
+    st.caption("Cálculo de Esquema Basal-Bolus e Correção Prandial para Enfermaria e CTI")
+    
+    col1, col2 = st.columns(2)
+    with col1:
+        peso_ins = st.number_input("Peso do Paciente (kg)", min_value=30.0, max_value=200.0, value=70.0)
+        perfil_pac = st.selectbox("Perfil de Sensibilidade:", ["Sensível / Idoso / DRC (0,3 UI/kg/dia)", "Usual / Eutrófico (0,4 a 0,5 UI/kg/dia)", "Resistente / Obeso / Corticoide (0,6 UI/kg/dia)"])
+    with col2:
+        glicemia_hosp = st.number_input("Glicemia Capilar Atual (mg/dL)", min_value=40.0, max_value=600.0, value=240.0, step=10.0)
+        opcao_calc = st.radio("Cálculo Pretendido:", ["Dose Total Diária Basal-Bolus", "Escala de Correção Prandial"])
+
+    if "0,3 UI" in perfil_pac:
+        fator_d = 0.3
+    elif "0,4" in perfil_pac:
+        fator_d = 0.45
+    else:
+        fator_d = 0.6
+        
+    dtd = peso_ins * fator_d
+    dose_basal = dtd * 0.5
+    dose_bolus_total = dtd * 0.5
+    dose_refeicao = dose_bolus_total / 3.0
+
+    if opcao_calc == "Dose Total Diária Basal-Bolus":
+        st.markdown("---")
+        st.subheader(f"📋 Esquema Inicial Basal-Bolus Calculado (DTD = {dtd:.0f} UI/dia):")
+        
+        st.success(f"1. **Insulina Basal (50% = {dose_basal:.0f} UI/dia):**")
+        st.write(f"   • **Glargina U100:** **{dose_basal:.0f} UI** SC 1x/dia à noite.")
+        st.write(f"   • **OU NPH:** **{dose_basal * 0.66:.0f} UI** de manhã + **{dose_basal * 0.33:.0f} UI** à noite (2/3 manhã, 1/3 noite).")
+        
+        st.info(f"2. **Insulina Prandial / Bolus (50% = {dose_bolus_total:.0f} UI/dia dividida em 3 refeições):**")
+        st.write(f"   • **Lispro / Aspart / Regular:** **{dose_refeicao:.0f} UI** SC antes do Café, Almoço e Jantar.")
+
+    else:
+        st.markdown("---")
+        st.subheader("📊 Fator de Sensibilidade & Correção de Hiperglicemia:")
+        fs = 1800 / dtd if dtd > 0 else 40
+        og = 130.0
+        
+        if glicemia_hosp > og:
+            bolus_corr = (glicemia_hosp - og) / fs
+        else:
+            bolus_corr = 0.0
+            
+        c1, c2, c3 = st.columns(3)
+        c1.metric("Fator de Sensibilidade (FS)", f"{fs:.0f} mg/dL por 1 UI")
+        c2.metric("Glicemia Atual vs. Alvo (130)", f"{glicemia_hosp:.0f} mg/dL")
+        c3.metric("Bolus de Correção Indicado", f"{bolus_corr:.1f} UI")
+        
+        st.info(f"💡 **Conduta:** Aplicar **{math.ceil(bolus_corr)} UI** de Insulina Rápida/Ultrarrápida SC para corrigir a glicemia atual de {glicemia_hosp:.0f} mg/dL.")
+
+# -----------------------------------------------------------------------------
+# MÓDULO 10: DOSES PEDIÁTRICAS
+# -----------------------------------------------------------------------------
+elif modulo == "10. Doses Pediátricas por Peso":
     st.header("👶 Calculadora de Prescrição Pediátrica Rápida")
     
     peso_ped = st.number_input("Peso da Criança (kg)", min_value=2.0, max_value=60.0, value=15.0, step=0.5)
@@ -192,225 +535,61 @@ elif modulo == "4. Doses Pediátricas por Peso":
     
     with col1:
         st.subheader("Analgésicos / Antitérmicos")
-        
         gotas_dipirona = int(round(peso_ped))
         st.write(f"• **Dipirona 500 mg/mL (Gotas):** **{gotas_dipirona} gotas** de 6/6h (se dor/febre).")
-        
         gotas_ibu = int(round(peso_ped))
         st.write(f"• **Ibuprofeno 100 mg/mL (Gotas):** **{gotas_ibu} gotas** de 8/8h (máx 40 gotas).")
-        
         gotas_para = int(round(peso_ped))
         st.write(f"• **Paracetamol 200 mg/mL (Gotas):** **{gotas_para} gotas** de 6/6h (máx 35 gotas).")
 
     with col2:
         st.subheader("Antibióticos & Corticoides")
-        
         ml_amox = peso_ped / 3.0
         st.write(f"• **Amoxicilina 250 mg/5 mL:** **{ml_amox:.1f} mL** de 8/8h por 7 a 10 dias.")
-        
         ml_pred = peso_ped / 3.0
         st.write(f"• **Prednisolona 3 mg/mL (Solução):** **{ml_pred:.1f} mL** 1x/dia pela manhã por 5 dias.")
 
 # -----------------------------------------------------------------------------
-# MÓDULO 5: ESCORES CRÍTICOS (NEWS2, CURB-65 & qSOFA)
+# MÓDULO 11: ESCORES CRÍTICOS
 # -----------------------------------------------------------------------------
-elif modulo == "5. Escores Críticos (NEWS2, CURB-65 & qSOFA)":
-    st.header("🧮 Escores de Risco e Severidade Clínica")
+elif modulo == "11. Escores Críticos (CURB-65 & qSOFA)":
+    st.header("🧮 Escores de Risco e Severidade")
     
-    tabs = st.tabs(["🏥 1. NEWS 2 (National Early Warning Score)", "🫁 2. CURB-65 (PAC)", "🚨 3. qSOFA (Triagem Sepse)"])
+    st.subheader("1. CURB-65 (Pneumonia Adquirida na Comunidade)")
+    c1 = st.checkbox("C - Confusão mental (GCS < 15)")
+    c2 = st.checkbox("U - Ureia > 50 mg/dL (ou BUN > 19 mg/dL)")
+    c3 = st.checkbox("R - Frequência Respiratória >= 30 irpm")
+    c4 = st.checkbox("B - Pressão Arterial Sistólica < 90 mmHg ou Diastólica <= 60 mmHg")
+    c5 = st.checkbox("65 - Idade >= 65 anos")
     
-    # -------------------------------------------------------------------------
-    # TAB 1: NEWS 2
-    # -------------------------------------------------------------------------
-    with tabs[0]:
-        st.subheader("National Early Warning Score 2 (NEWS2 - Royal College of Physicians)")
-        st.caption("Ferramenta padrão ouro para detecção precoce de deterioração clínica e triagem de Sepse hospitalar/pré-hospitalar (Recomendado sobre o qSOFA pela Surviving Sepsis Campaign 2024/2026).")
+    curb_score = sum([c1, c2, c3, c4, c5])
+    st.markdown(f"**Pontuação CURB-65:** **{curb_score} ponto(s)**")
+    
+    if curb_score <= 1:
+        st.success("✅ Risco baixo (Mortalidade < 1,5%). Conduta: Tratamento Ambulatorial.")
+    elif curb_score == 2:
+        st.warning("⚠️ Risco moderado (Mortalidade ~ 9,2%). Conduta: Considerar Internação Hospitalar / Enfermaria.")
+    else:
+        st.error("🚨 Risco elevado (Mortalidade > 22%). Conduta: Internação Hospitalar (Avaliar UTI se score >= 4).")
         
-        col_n1, col_n2 = st.columns(2)
-        
-        with col_n1:
-            fr_news = st.number_input("Frequência Respiratória (irpm)", min_value=4, max_value=60, value=16, step=1, key="news_fr")
-            
-            escala_spo2 = st.radio(
-                "Escala de Saturação de O₂ (SpO₂):",
-                ["Escala 1 (Padrão Geral)", "Escala 2 (Insuficiência Hipercápnica / DPOC - Alvo 88-92%)"],
-                key="news_escala"
-            )
-            
-            spo2_news = st.number_input("Saturação de O₂ (%)", min_value=50, max_value=100, value=97, step=1, key="news_spo2")
-            o2_supl = st.radio("Uso de Oxigênio Suplementar?", ["Não (Ar Ambiente)", "Sim"], key="news_o2")
-            pas_news = st.number_input("Pressão Arterial Sistólica (PAS em mmHg)", min_value=40, max_value=260, value=120, step=5, key="news_pas")
-
-        with col_n2:
-            fc_news = st.number_input("Frequência Cardíaca / Pulso (bpm)", min_value=20, max_value=220, value=75, step=5, key="news_fc")
-            
-            consciencia_news = st.selectbox(
-                "Nível de Consciência (ACVPU):",
-                [
-                    "A - Alerta (Preservado)",
-                    "C - Nova Confusão Mental / Delirium Agudo",
-                    "V - Responde à Voz",
-                    "P - Responde à Dor",
-                    "U - Inconsciente / Sem Resposta"
-                ],
-                key="news_consciencia"
-            )
-            
-            temp_news = st.number_input("Temperatura Corporal (°C)", min_value=30.0, max_value=43.0, value=36.8, step=0.1, key="news_temp")
-
-        # CÁLCULO DE PONTUAÇÃO DO NEWS2
-        pts_fr = 0
-        if fr_news <= 8:
-            pts_fr = 3
-        elif 9 <= fr_news <= 11:
-            pts_fr = 1
-        elif 12 <= fr_news <= 20:
-            pts_fr = 0
-        elif 21 <= fr_news <= 24:
-            pts_fr = 2
-        else: # >= 25
-            pts_fr = 3
-
-        pts_spo2 = 0
-        if "Escala 1" in escala_spo2:
-            if spo2_news <= 91:
-                pts_spo2 = 3
-            elif 92 <= spo2_news <= 93:
-                pts_spo2 = 2
-            elif 94 <= spo2_news <= 95:
-                pts_spo2 = 1
-            else:
-                pts_spo2 = 0
-        else: # Escala 2 (DPOC / Hipercápnico)
-            if spo2_news <= 83:
-                pts_spo2 = 3
-            elif 84 <= spo2_news <= 85:
-                pts_spo2 = 2
-            elif 86 <= spo2_news <= 87:
-                pts_spo2 = 1
-            elif 88 <= spo2_news <= 92:
-                pts_spo2 = 0
-            elif 93 <= spo2_news <= 94 and o2_supl == "Sim":
-                pts_spo2 = 1
-            elif 95 <= spo2_news <= 96 and o2_supl == "Sim":
-                pts_spo2 = 2
-            elif spo2_news >= 97 and o2_supl == "Sim":
-                pts_spo2 = 3
-            elif spo2_news >= 93 and o2_supl == "Não (Ar Ambiente)":
-                pts_spo2 = 0
-
-        pts_o2 = 2 if o2_supl == "Sim" else 0
-
-        pts_pas = 0
-        if pas_news <= 90:
-            pts_pas = 3
-        elif 91 <= pas_news <= 100:
-            pts_pas = 2
-        elif 101 <= pas_news <= 110:
-            pts_pas = 1
-        elif 111 <= pas_news <= 219:
-            pts_pas = 0
-        else: # >= 220
-            pts_pas = 3
-
-        pts_fc = 0
-        if fc_news <= 40:
-            pts_fc = 3
-        elif 41 <= fc_news <= 50:
-            pts_fc = 1
-        elif 51 <= fc_news <= 90:
-            pts_fc = 0
-        elif 91 <= fc_news <= 110:
-            pts_fc = 1
-        elif 111 <= fc_news <= 130:
-            pts_fc = 2
-        else: # >= 131
-            pts_fc = 3
-
-        pts_consciencia = 0 if "A - Alerta" in consciencia_news else 3
-
-        pts_temp = 0
-        if temp_news <= 35.0:
-            pts_temp = 3
-        elif 35.1 <= temp_news <= 36.0:
-            pts_temp = 1
-        elif 36.1 <= temp_news <= 38.0:
-            pts_temp = 0
-        elif 38.1 <= temp_news <= 39.0:
-            pts_temp = 1
-        else: # >= 39.1
-            pts_temp = 2
-
-        score_news2 = pts_fr + pts_spo2 + pts_o2 + pts_pas + pts_fc + pts_consciencia + pts_temp
-        red_score = any(p == 3 for p in [pts_fr, pts_spo2, pts_pas, pts_fc, pts_consciencia, pts_temp])
-
-        st.markdown("---")
-        st.subheader(f"📊 Pontuação Total NEWS2: **{score_news2} ponto(s)**")
-        
-        # Detalhamento de cada item
-        st.caption(f"Detalhamento: FR ({pts_fr}p) | SpO₂ ({pts_spo2}p) | O₂ Supl. ({pts_o2}p) | PAS ({pts_pas}p) | FC ({pts_fc}p) | Consciência ({pts_consciencia}p) | Temp ({pts_temp}p)")
-
-        st.markdown("### 🚦 Estratificação de Risco & Resposta Clínica:")
-        if score_news2 >= 7:
-            st.error("🚨 **RISCO ALTO / EMERGÊNCIA CLÍNICA (≥ 7 pontos)**")
-            st.write("• **Conduta Imediata:** Resposta clínica emergencial imediata.")
-            st.write("• **Ações:** Acionar Equipe de Resposta Rápida (ERR) / Médico Intensivista. Avaliar transferência imediata para leito de UTI / Sala Vermelha.")
-            st.write("• **Monitorização:** Instalar monitorização contínua de sinais vitais.")
-            st.write("• **Suspeita de Infecção?** Iniciar protocolo de Sepse imediatamente (Coletar Hemoculturas, Lactato, Antibiótico em < 1h, Cristaloide 30 mL/kg).")
-
-        elif score_news2 >= 5 or red_score:
-            st.warning("⚠️ **RISCO MODERADO (5-6 pontos ou Parâmetro Único = 3 [Red Score])**")
-            st.write("• **Conduta Imediata:** Avaliação médica urgente pelo plantonista do setor.")
-            st.write("• **Ações:** Incrementar frequência de monitorização dos sinais vitais para no mínimo de 1/1h a 2/2h.")
-            st.write("• **THINK SEPSIS:** Se houver suspeita infecciosa, realizar triagem ativa para Sepse conforme as diretrizes Surviving Sepsis Campaign (SSC 2024/2026).")
-
-        else:
-            st.success("✅ **RISCO BAIXO (0 a 4 pontos)**")
-            st.write("• **Conduta:** Monitorização de rotina pela enfermagem (a cada 4 a 12 horas). Manter plano terapêutico habitual.")
-
-    # -------------------------------------------------------------------------
-    # TAB 2: CURB-65
-    # -------------------------------------------------------------------------
-    with tabs[1]:
-        st.subheader("Escore CURB-65 (Pneumonia Adquirida na Comunidade - PAC)")
-        c1 = st.checkbox("C - Confusão mental (GCS < 15 ou rebaixamento agudo)", key="c1")
-        c2 = st.checkbox("U - Ureia > 50 mg/dL (ou BUN > 19 mg/dL)", key="c2")
-        c3 = st.checkbox("R - Frequência Respiratória >= 30 irpm", key="c3")
-        c4 = st.checkbox("B - Pressão Arterial Sistólica < 90 mmHg ou Diastólica <= 60 mmHg", key="c4")
-        c5 = st.checkbox("65 - Idade >= 65 anos", key="c5")
-        
-        curb_score = sum([c1, c2, c3, c4, c5])
-        st.markdown(f"**Pontuação CURB-65:** **{curb_score} ponto(s)**")
-        
-        if curb_score <= 1:
-            st.success("✅ Risco baixo (Mortalidade < 1,5%). Conduta: Tratamento Ambulatorial.")
-        elif curb_score == 2:
-            st.warning("⚠️ Risco moderado (Mortalidade ~ 9,2%). Conduta: Considerar Internação Hospitalar em Enfermaria.")
-        else:
-            st.error("🚨 Risco elevado (Mortalidade > 22%). Conduta: Internação Hospitalar (Avaliar UTI se score >= 3-4).")
-
-    # -------------------------------------------------------------------------
-    # TAB 3: qSOFA
-    # -------------------------------------------------------------------------
-    with tabs[2]:
-        st.subheader("quickSOFA (qSOFA - Triagem Rápida)")
-        st.caption("Nota de atualização SSC 2024/2026: Devido à baixa sensibilidade do qSOFA (~23%), o NEWS2 é fortemente recomendado sobre o qSOFA como ferramenta de triagem única de sepse hospitalar.")
-        q1 = st.checkbox("Frequência Respiratória >= 22 irpm", key="q1")
-        q2 = st.checkbox("Alteração do Nível de Consciência (GCS < 15)", key="q2")
-        q3 = st.checkbox("Pressão Arterial Sistólica <= 100 mmHg", key="q3")
-        
-        qsofa_score = sum([q1, q2, q3])
-        st.markdown(f"**Pontuação qSOFA:** **{qsofa_score} ponto(s)**")
-        
-        if qsofa_score >= 2:
-            st.error("🚨 **qSOFA POSITIVO (>= 2 pontos)**: Alto risco de deterioração / UTI. Coletar Lactato, Hemoculturas, iniciar Antibiótico na 1ª hora e volume de 30 mL/kg de cristaloide se hipotensão.")
-        else:
-            st.info("qSOFA < 2 pontos. Manter monitorização contínua e reavaliar se piora clínica (usar NEWS2 se disponível).")
+    st.markdown("---")
+    st.subheader("2. qSOFA (Triagem Rápida de Sepse)")
+    q1 = st.checkbox("Frequência Respiratória >= 22 irpm")
+    q2 = st.checkbox("Alteração do Nível de Consciência (GCS < 15)")
+    q3 = st.checkbox("Pressão Arterial Sistólica <= 100 mmHg")
+    
+    qsofa_score = sum([q1, q2, q3])
+    st.markdown(f"**Pontuação qSOFA:** **{qsofa_score} ponto(s)**")
+    
+    if qsofa_score >= 2:
+        st.error("🚨 **qSOFA POSITIVO (>= 2 pontos)**: Alto risco de desfecho desfavorável/ICU. Coletar Lactato, Hemoculturas, iniciar Antibiótico na 1ª hora e volume de 30 mL/kg de cristaloide se hipotensão.")
+    else:
+        st.info("qSOFA < 2 pontos. Manter monitorização contínua e reavaliar se piora clínica.")
 
 # -----------------------------------------------------------------------------
-# MÓDULO 6: DENGUE
+# MÓDULO 12: DENGUE
 # -----------------------------------------------------------------------------
-elif modulo == "6. Dengue - Manejo Volêmico (MS)":
+elif modulo == "12. Dengue - Manejo Volêmico (MS)":
     st.header("🦟 Classificação e Hidratação na Dengue (Ministério da Saúde)")
     
     peso_dengue = st.number_input("Peso do Paciente (kg)", min_value=10.0, max_value=200.0, value=70.0, step=1.0)
@@ -450,9 +629,9 @@ elif modulo == "6. Dengue - Manejo Volêmico (MS)":
         st.write("• Repetir até 3 vezes conforme resposta hemodinâmica. Se refratário, iniciar Vasopressoria (Noradrenalina).")
 
 # -----------------------------------------------------------------------------
-# MÓDULO 7: QUEIMADURA
+# MÓDULO 13: QUEIMADURA
 # -----------------------------------------------------------------------------
-elif modulo == "7. Queimaduras (Regra de Parkland)":
+elif modulo == "13. Queimaduras (Regra de Parkland)":
     st.header("🔥 Hidratação no Paciente Queimado (Fórmula de Parkland)")
     
     peso_q = st.number_input("Peso do Paciente (kg)", min_value=10.0, max_value=200.0, value=70.0, step=1.0)

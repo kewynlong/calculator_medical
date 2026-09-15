@@ -586,6 +586,208 @@ elif modulo == "11. Escores Críticos (CURB-65 & qSOFA)":
     else:
         st.info("qSOFA < 2 pontos. Manter monitorização contínua e reavaliar se piora clínica.")
 
+    st.markdown("---")
+    st.subheader("3. NEWS2 (National Early Warning Score 2)")
+    st.caption("Escala de alerta clínico baseada em sinais vitais. A Escala 2 de SpO₂ deve ser usada somente quando indicada pelo protocolo clínico para insuficiência respiratória hipercápnica.")
+
+    news2_escala_spo2 = st.radio(
+        "Escala de SpO₂ do NEWS2:",
+        ["Escala 1 (padrão)", "Escala 2 (hipercapnia, se indicada)"],
+        key="news2_escala_spo2"
+    )
+
+    news_col1, news_col2, news_col3 = st.columns(3)
+    with news_col1:
+        news2_fr = st.number_input("Frequência Respiratória (irpm)", min_value=1, max_value=80, value=16, step=1, key="news2_fr")
+        news2_spo2 = st.number_input("SpO₂ (%)", min_value=50, max_value=100, value=98, step=1, key="news2_spo2")
+    with news_col2:
+        news2_o2 = st.selectbox("Oxigênio suplementar:", ["Não", "Sim"], key="news2_o2")
+        news2_temp = st.number_input("Temperatura (°C)", min_value=25.0, max_value=45.0, value=36.5, step=0.1, key="news2_temp")
+    with news_col3:
+        news2_pas = st.number_input("Pressão Arterial Sistólica (mmHg)", min_value=40, max_value=300, value=120, step=1, key="news2_pas")
+        news2_fc = st.number_input("Frequência Cardíaca (bpm)", min_value=20, max_value=250, value=80, step=1, key="news2_fc")
+
+    news2_consciencia = st.selectbox(
+        "Nível de consciência (ACVPU):",
+        ["Alerta (A)", "Confusão nova (C)", "Responde à voz (V)", "Responde à dor (P)", "Não responde (U)"],
+        key="news2_consciencia"
+    )
+
+    # Pontuação NEWS2 conforme os intervalos do RCP. Qualquer C, V, P ou U = 3 pontos.
+    if news2_fr <= 8:
+        news2_fr_score = 3
+    elif news2_fr <= 11:
+        news2_fr_score = 1
+    elif news2_fr <= 20:
+        news2_fr_score = 0
+    elif news2_fr <= 24:
+        news2_fr_score = 2
+    else:
+        news2_fr_score = 3
+
+    if news2_escala_spo2 == "Escala 1 (padrão)":
+        if news2_spo2 <= 91:
+            news2_spo2_score = 3
+        elif news2_spo2 <= 93:
+            news2_spo2_score = 2
+        elif news2_spo2 <= 95:
+            news2_spo2_score = 1
+        else:
+            news2_spo2_score = 0
+    else:
+        if news2_spo2 <= 83:
+            news2_spo2_score = 3
+        elif news2_spo2 <= 85:
+            news2_spo2_score = 2
+        elif news2_spo2 <= 87:
+            news2_spo2_score = 1
+        elif news2_spo2 <= 92:
+            news2_spo2_score = 0
+        elif news2_spo2 <= 94:
+            news2_spo2_score = 1
+        elif news2_spo2 <= 96:
+            news2_spo2_score = 2
+        else:
+            news2_spo2_score = 3
+
+    news2_o2_score = 2 if news2_o2 == "Sim" else 0
+
+    if news2_temp <= 35.0:
+        news2_temp_score = 3
+    elif news2_temp <= 36.0:
+        news2_temp_score = 1
+    elif news2_temp <= 38.0:
+        news2_temp_score = 0
+    elif news2_temp <= 39.0:
+        news2_temp_score = 1
+    else:
+        news2_temp_score = 2
+
+    if news2_pas <= 90:
+        news2_pas_score = 3
+    elif news2_pas <= 100:
+        news2_pas_score = 2
+    elif news2_pas <= 110:
+        news2_pas_score = 1
+    elif news2_pas <= 219:
+        news2_pas_score = 0
+    else:
+        news2_pas_score = 3
+
+    if news2_fc <= 40:
+        news2_fc_score = 3
+    elif news2_fc <= 50:
+        news2_fc_score = 1
+    elif news2_fc <= 90:
+        news2_fc_score = 0
+    elif news2_fc <= 110:
+        news2_fc_score = 1
+    elif news2_fc <= 130:
+        news2_fc_score = 2
+    else:
+        news2_fc_score = 3
+
+    news2_consciencia_score = 0 if news2_consciencia == "Alerta (A)" else 3
+    news2_componentes = [
+        news2_fr_score, news2_spo2_score, news2_o2_score,
+        news2_temp_score, news2_pas_score, news2_fc_score,
+        news2_consciencia_score
+    ]
+    news2_total = sum(news2_componentes)
+    news2_maior_componente = max(news2_componentes)
+
+    st.markdown(f"**Pontuação NEWS2:** **{news2_total} ponto(s)**")
+    st.caption(
+        f"Componentes: FR {news2_fr_score}, SpO₂ {news2_spo2_score}, O₂ {news2_o2_score}, "
+        f"temperatura {news2_temp_score}, PAS {news2_pas_score}, FC {news2_fc_score}, "
+        f"consciência {news2_consciencia_score}."
+    )
+
+    if news2_total >= 7:
+        st.error("🚨 **NEWS2 alto (≥ 7):** necessidade de avaliação clínica imediata e escalonamento conforme protocolo institucional.")
+    elif news2_total >= 5 or news2_maior_componente >= 3:
+        st.warning("⚠️ **NEWS2 com risco aumentado:** realizar avaliação clínica urgente e aumentar a frequência de monitorização conforme protocolo.")
+    elif news2_total >= 1:
+        st.info("NEWS2 baixo, porém diferente de zero: manter vigilância e reavaliar a tendência dos sinais vitais.")
+    else:
+        st.success("NEWS2 = 0: sem alterações pontuáveis neste momento; manter avaliação clínica habitual.")
+
+    st.markdown("---")
+    st.subheader("4. MEWS (Modified Early Warning Score)")
+    st.caption("Versão clínica de cinco parâmetros: PAS, frequência cardíaca, frequência respiratória, temperatura e escala AVPU. Faixas de conduta podem variar conforme o protocolo institucional.")
+
+    mews_col1, mews_col2, mews_col3 = st.columns(3)
+    with mews_col1:
+        mews_pas = st.number_input("PAS (mmHg)", min_value=40, max_value=300, value=120, step=1, key="mews_pas")
+        mews_fc = st.number_input("Frequência Cardíaca (bpm)", min_value=20, max_value=250, value=80, step=1, key="mews_fc")
+    with mews_col2:
+        mews_fr = st.number_input("Frequência Respiratória (irpm)", min_value=1, max_value=80, value=16, step=1, key="mews_fr")
+        mews_temp = st.number_input("Temperatura (°C)", min_value=25.0, max_value=45.0, value=36.5, step=0.1, key="mews_temp")
+    with mews_col3:
+        mews_avpu = st.selectbox(
+            "Nível de consciência (AVPU):",
+            ["Alerta (A)", "Responde à voz (V)", "Responde à dor (P)", "Não responde (U)"],
+            key="mews_avpu"
+        )
+
+    if mews_pas >= 200:
+        mews_pas_score = 2
+    elif mews_pas >= 101:
+        mews_pas_score = 0
+    elif mews_pas >= 81:
+        mews_pas_score = 1
+    elif mews_pas >= 71:
+        mews_pas_score = 2
+    else:
+        mews_pas_score = 3
+
+    if mews_fc < 40:
+        mews_fc_score = 2
+    elif mews_fc <= 50:
+        mews_fc_score = 1
+    elif mews_fc <= 100:
+        mews_fc_score = 0
+    elif mews_fc <= 110:
+        mews_fc_score = 1
+    elif mews_fc <= 129:
+        mews_fc_score = 2
+    else:
+        mews_fc_score = 3
+
+    if mews_fr < 9:
+        mews_fr_score = 2
+    elif mews_fr <= 14:
+        mews_fr_score = 0
+    elif mews_fr <= 20:
+        mews_fr_score = 1
+    elif mews_fr <= 29:
+        mews_fr_score = 2
+    else:
+        mews_fr_score = 3
+
+    if mews_temp < 35.0:
+        mews_temp_score = 2
+    elif mews_temp <= 38.4:
+        mews_temp_score = 0
+    else:
+        mews_temp_score = 2
+
+    mews_avpu_score = ["Alerta (A)", "Responde à voz (V)", "Responde à dor (P)", "Não responde (U)"].index(mews_avpu)
+    mews_total = sum([mews_pas_score, mews_fc_score, mews_fr_score, mews_temp_score, mews_avpu_score])
+
+    st.markdown(f"**Pontuação MEWS:** **{mews_total} ponto(s)**")
+    st.caption(
+        f"Componentes: PAS {mews_pas_score}, FC {mews_fc_score}, FR {mews_fr_score}, "
+        f"temperatura {mews_temp_score}, AVPU {mews_avpu_score}."
+    )
+
+    if mews_total >= 5:
+        st.error("🚨 **MEWS ≥ 5:** alto risco de deterioração clínica; avaliação imediata e escalonamento conforme protocolo institucional.")
+    elif mews_total >= 3:
+        st.warning("⚠️ **MEWS 3–4:** risco aumentado; reavaliar o paciente e intensificar a monitorização conforme protocolo.")
+    else:
+        st.success("MEWS 0–2: manter monitorização e reavaliar conforme a evolução clínica.")
+
 # -----------------------------------------------------------------------------
 # MÓDULO 12: DENGUE
 # -----------------------------------------------------------------------------

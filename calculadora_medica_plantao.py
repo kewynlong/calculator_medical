@@ -1070,7 +1070,7 @@ elif modulo == "16. Abdome Agudo e Líquidos (GBS, pancreatite, Tokyo, Alvarado,
 # -----------------------------------------------------------------------------
 elif modulo == "17. Acompanhamento Ambulatorial e Geriatria":
     st.header("🏠 Acompanhamento ambulatorial e avaliação geriátrica")
-    amb_tipo = st.selectbox("Selecione o instrumento", ["CKD-EPI 2021", "Risco cardiovascular SBC/ERG", "PREVENT — dados e limites", "Mini-Mental por escolaridade", "MoCA — disponibilidade oficial", "Katz", "Pfeffer/FAQ", "Barthel", "Lawton", "FRAIL", "GDS"], key="amb_tipo")
+    amb_tipo = st.selectbox("Selecione o instrumento", ["CKD-EPI 2021", "Risco cardiovascular SBC/ERG", "PREVENT — risco em 10/30 anos", "Mini-Mental por escolaridade", "MoCA — disponibilidade oficial", "Bateria cognitiva: MoCA/MMSE/FV/relógio", "Katz", "Pfeffer/FAQ", "Barthel", "Lawton", "FRAIL", "GDS"], key="amb_tipo")
     if amb_tipo == "CKD-EPI 2021":
         sexo_a = st.radio("Sexo biológico", ["Feminino", "Masculino"], key="amb_sexo")
         idade_a = st.number_input("Idade", 18, 120, 65, key="amb_idade")
@@ -1084,9 +1084,28 @@ elif modulo == "17. Acompanhamento Ambulatorial e Geriatria":
         st.caption("Implementação educativa do Escore de Risco Global baseado em Framingham; o risco depende da equação/versão e deve ser conferido com a diretriz SBC vigente.")
         erg_sexo = st.selectbox("Sexo", ["Homem", "Mulher"], key="erg_sexo"); erg_idade = st.number_input("Idade", 20, 100, 55, key="erg_idade"); ct = st.number_input("Colesterol total (mg/dL)", 50.0, 500.0, 200.0, key="erg_ct"); hdl = st.number_input("HDL (mg/dL)", 10.0, 150.0, 50.0, key="erg_hdl"); pas = st.number_input("PAS (mmHg)", 60, 250, 130, key="erg_pas"); trata = st.checkbox("Usa anti-hipertensivo", key="erg_trata"); fuma = st.checkbox("Tabagismo atual", key="erg_fuma"); diab = st.checkbox("Diabetes", key="erg_diab")
         st.info("Campos registrados. Para evitar falsa precisão, use calculadora SBC/Framingham validada para converter esses dados em percentual; esta interface não substitui a equação oficial completa.")
-    elif amb_tipo == "PREVENT — dados e limites":
-        st.warning("PREVENT não é calculado por uma soma simples. A implementação fiel exige a equação/licença e testes da AHA, além de validação local; este painel não inventa uma probabilidade.")
-        st.write("Registrar: sexo, idade 30–79 anos, colesterol total/HDL, PAS e tratamento, tabagismo, diabetes, IMC, TFGe e variáveis opcionais como albuminúria/HbA1c. Aplicável a prevenção primária, não a doença cardiovascular conhecida.")
+    elif amb_tipo == "PREVENT — risco em 10/30 anos":
+        st.subheader("PREVENT™ — estimativa cardiovascular")
+        st.markdown("[Abrir calculadora PREVENT do Instituto Limiares](https://institutolimiares.com.br/recursos/calculadora-prevent/)")
+        st.write("O PREVENT estima DCV total, ASCVD e insuficiência cardíaca em 10 anos; para pessoas de 30–59 anos, também em 30 anos. O modelo base usa idade, sexo, PAS, colesterol total, HDL, IMC, TFGe, diabetes, tabagismo, uso de anti-hipertensivo e estatina.")
+        st.warning("Não repliquei uma porcentagem local sem os coeficientes oficiais completos e validação. O resultado deve ser obtido na calculadora validada e interpretado como estimativa de população dos EUA, não como decisão automática para o Brasil.")
+    elif amb_tipo == "Bateria cognitiva: MoCA/MMSE/FV/relógio":
+        st.subheader("Triagem cognitiva integrada")
+        mmse = st.number_input("Mini-Mental (0–30)", 0, 30, 24, key="cog_mmse")
+        moca = st.number_input("MoCA (0–30; versão oficial)", 0, 30, 24, key="cog_moca")
+        fluencia = st.number_input("Fluência verbal — animais em 1 minuto", 0, 50, 12, key="cog_fv")
+        relogio = st.selectbox("Teste do relógio", ["Preservado", "Déficit visuoespacial/executivo", "Não realizado"], key="cog_relogio")
+        comportamento = st.multiselect("Achados clínicos", ["Desinibição/perda de crítica", "Apatia/perda de empatia", "Compulsões/hiperoralidade", "Flutuações cognitivas", "Alucinações visuais recorrentes", "Parkinsonismo", "Amnésia episódica predominante", "Curso em degraus/fatores vasculares"], key="cog_comportamento")
+        st.info("Pontuações baixas sugerem comprometimento cognitivo, mas não diagnosticam demência; ajustar escolaridade/idioma, excluir delirium, depressão, déficit sensorial e causas reversíveis.")
+        if any(x in comportamento for x in ["Desinibição/perda de crítica", "Apatia/perda de empatia", "Compulsões/hiperoralidade"]):
+            st.warning("Perfil comportamental/executivo pode sugerir variante comportamental de demência frontotemporal (DFT), especialmente com início mais precoce; requer neuropsicologia e avaliação neurológica.")
+        if any(x in comportamento for x in ["Flutuações cognitivas", "Alucinações visuais recorrentes", "Parkinsonismo"]):
+            st.warning("Flutuações, alucinações visuais e parkinsonismo sugerem demência com corpos de Lewy (DCL), mas medicamentos, delirium e doença de Parkinson devem ser avaliados.")
+        if "Amnésia episódica predominante" in comportamento:
+            st.info("Amnésia episódica predominante favorece síndrome amnéstica, frequentemente compatível com doença de Alzheimer, mas não é específica.")
+        if "Curso em degraus/fatores vasculares" in comportamento:
+            st.info("Curso em degraus, sinais focais ou fatores vasculares sugerem comprometimento vascular; correlacionar com neuroimagem.")
+        st.caption("A bateria orienta hipótese sindrômica, não substitui avaliação funcional, neuropsicológica, neurológica e investigação de causas reversíveis.")
     elif amb_tipo == "Mini-Mental por escolaridade":
         escolar = st.selectbox("Escolaridade", ["Analfabeto", "1–3 anos", "4–7 anos", "≥8 anos"], key="mm_escolar"); mm = st.number_input("Pontuação (0–30)", 0, 30, 24, key="mm_score")
         cortes = {"Analfabeto":21, "1–3 anos":22, "4–7 anos":23, "≥8 anos":24}
@@ -1155,6 +1174,32 @@ elif modulo == "18. Resistência Antimicrobiana (Ambler e MRSA)":
             "Haemophilus influenzae — BLNAR": "PBP3 alterada sem betalactamase detectável; ampicilina pode falhar. Direcionar pelo antibiograma e foco."
         }
         st.write(f"**Mecanismo selecionado:** {mecanismo}")
+        sitio = st.selectbox("Sítio/síndrome", ["ITU não complicada", "ITU complicada/pielonefrite", "Pneumonia", "Bacteremia/sepse", "Endocardite", "Infecção intra-abdominal", "Pele/partes moles", "Osteomielite/articular"], key="resist_sitio")
+        terapias = {
+            "E. coli/Klebsiella — ESBL": "ITU não complicada: nitrofurantoína 100 mg VO 12/12h por 5 dias ou TMP-SMX se sensível. Pielonefrite/bacteremia: ertapenem 1 g IV 24/24h ou meropenem 1 g IV 8/8h; descalonar conforme MIC. Evitar nitrofurantoína/fosfomicina em bacteremia.",
+            "Enterobacter/Citrobacter/Serratia — AmpC": "Bacteremia/pneumonia/intra-abdominal: cefepima 2 g IV 8/8h se sensível; carbapenêmico se ESBL coproduzida, MIC desfavorável ou choque. Evitar ceftriaxona em infecção invasiva por risco de seleção.",
+            "Enterobacterales — KPC": "Bacteremia, pneumonia ou intra-abdominal: ceftazidima-avibactam 2,5 g IV 8/8h, meropenem-vaborbactam 4 g IV 8/8h ou imipenem-cilastatina-relebactam 1,25 g IV 6/6h, conforme MIC/disponibilidade. ITU pode usar opção ativa pelo antibiograma.",
+            "Enterobacterales — MBL": "Infecção invasiva: ceftazidima-avibactam + aztreonam ou cefiderocol, com infectologia e teste de suscetibilidade. Não usar avibactam isolado contra MBL; evitar tigeciclina em bacteremia/ITU.",
+            "Pseudomonas aeruginosa": "Pneumonia/bacteremia/intra-abdominal: usar beta-lactâmico ativo por MIC, como ceftolozano-tazobactam 3 g IV 8/8h, ceftazidima-avibactam 2,5 g IV 8/8h, imipenem-relebactam 1,25 g IV 6/6h ou cefiderocol 2 g IV 8/8h; adaptar ao mecanismo e foco.",
+            "Acinetobacter baumannii": "CRAB invasivo: sulbactam-durlobactam 1 g/1 g IV 6/6h + carbapenêmico ou esquema recomendado local; alternativas incluem ampicilina-sulbactam em alta dose combinada, cefiderocol ou minociclina conforme suscetibilidade. Evitar polimixina isolada.",
+            "Stenotrophomonas maltophilia": "Pneumonia/bacteremia: TMP-SMX 10–15 mg/kg/dia do componente trimetoprima dividido 8/8–12/12h, minociclina 200 mg IV/VO ataque e 100 mg 12/12h, levofloxacino 750 mg/dia ou cefiderocol, conforme suscetibilidade e foco.",
+            "Staphylococcus aureus — MRSA": "Pneumonia: vancomicina 15–20 mg/kg IV 8/8–12/12h com monitorização AUC ou linezolida 600 mg IV/VO 12/12h. Bacteremia/endocardite: vancomicina ou daptomicina 6–10 mg/kg IV/dia; osteoarticular/pele: vancomicina, linezolida, clindamicina/doxiciclina se sensível e foco apropriado.",
+            "Enterococcus — VRE": "Bacteremia/endocardite: linezolida 600 mg IV/VO 12/12h ou daptomicina 8–12 mg/kg IV/dia, com especialista. ITU baixa pode usar nitrofurantoína se sensível; não extrapolar para pielonefrite/bacteremia.",
+            "Haemophilus influenzae — BLNAR": "Pneumonia/meningite/invasiva: ceftriaxona ou cefotaxima se sensível; BLNAR pode exigir ceftriaxona. Ajustar ao sítio, MIC e gravidade; não presumir ampicilina ativa.",
+        }
+        mecanismo_nota = {
+            "ESBL classe A (CTX-M/TEM/SHV)": "ESBL: evitar cefalosporinas de 3ª geração em infecção invasiva; carbapenêmico costuma ser referência quando indicado.",
+            "AmpC classe C induzível": "AmpC induzível: ceftriaxona pode selecionar resistência durante terapia invasiva; preferir opção ativa e estável à AmpC conforme MIC.",
+            "AmpC classe C desreprimida": "AmpC desreprimida: tratar como fenótipo de maior risco e priorizar agente ativo por MIC; consultar infectologia.",
+            "KPC classe A": "KPC: escolher novo beta-lactâmico/inibidor ativo por MIC; evitar combinar empiricamente múltiplos beta-lactâmicos.",
+            "NDM classe B": "MBL NDM: avibactam isolado não é ativo; aztreonam-avibactam/combinação ou cefiderocol dependem de teste e foco.",
+            "VIM/IMP classe B": "MBL VIM/IMP: mesma cautela; confirmar mecanismo e atividade in vitro antes de direcionar.",
+            "mecA/mecC → PBP2a": "MRSA: beta-lactâmicos usuais não vencem PBP2a; selecionar agente por sítio, MIC e PK/PD.",
+            "vanA/vanB": "VRE: vancomicina não é confiável; linezolida/daptomicina dependem de foco, MIC e hemograma/CPK.",
+        }
+        st.info(f"**Opções por sítio — {sitio}:** {terapias[agente]}")
+        if mecanismo in mecanismo_nota:
+            st.caption(f"**Mecanismo e racional:** {mecanismo_nota[mecanismo]}")
         st.write(base[agente])
         st.warning("Antes de qualquer terapia: confirmar síndrome e foco, qualidade da amostra, MIC/antibiograma, função renal/hepática, alergias, gravidez, interações, controle de foco e epidemiologia local. Saída é apoio para revisão, não prescrição.")
     else:
@@ -1266,31 +1311,39 @@ elif modulo == "19. Interpretação de Sorologias":
         st.info("Queda de quatro vezes do título é a referência usual de resposta; aumento sustentado de quatro vezes sugere reinfecção ou falha. O título isolado não define duração da infecção.")
 
     elif sorologia == "Toxoplasmose na gestação":
-        st.subheader("Toxoplasmose na gestação — IgG, IgM e avidez")
+        st.subheader("Toxoplasmose na gestação — algoritmo por idade gestacional")
         semanas = st.number_input("Idade gestacional (semanas)", 1.0, 42.0, 12.0, step=0.1, key="toxo_semanas")
-        toxo_igg = resultado("Toxoplasma IgG", "toxo_igg")
-        toxo_igm = resultado("Toxoplasma IgM", "toxo_igm")
-        avidez = st.selectbox("Avidez do IgG", ["Não realizada", "Baixa", "Intermediária", "Alta"], key="toxo_avidez")
-        if toxo_igg.startswith("Negativo") and toxo_igm.startswith("Negativo"):
-            st.info("Gestante suscetível no momento: orientar prevenção e repetir conforme protocolo de pré-natal/local.")
-        elif toxo_igg.startswith("Positivo") and toxo_igm.startswith("Negativo"):
-            st.success("Infecção anterior provável, sem evidência sorológica de infecção recente; documentar e seguir protocolo obstétrico.")
-        elif toxo_igg.startswith("Negativo") and toxo_igm.startswith("Positivo"):
-            st.warning("IgM isolado pode ser falso-positivo ou infecção muito recente. Repetir em laboratório de referência, solicitar IgG em amostra pareada e discutir imediatamente com obstetrícia/infectologia.")
-        elif toxo_igg.startswith("Positivo") and toxo_igm.startswith("Positivo"):
-            if avidez == "Alta" and semanas < 18:
-                st.success("Alta avidez antes de 18 semanas favorece infecção anterior à gestação, reduzindo a probabilidade de infecção primária recente. Correlacionar com data da coleta, método e histórico.")
-            elif avidez == "Baixa" and semanas < 18:
-                st.error("Baixa avidez antes de 18 semanas é compatível com infecção primária relativamente recente, mas não define sozinha a data. Encaminhar imediatamente para protocolo obstétrico, confirmação em referência e avaliação fetal.")
-            elif semanas >= 18 and avidez == "Baixa":
-                st.warning("Após 18 semanas, baixa avidez não data com segurança a infecção e pode persistir. Encaminhar para obstetrícia/infectologia; decisão de tratamento e investigação fetal depende do protocolo vigente.")
-            elif semanas >= 18 and avidez == "Alta":
-                st.info("Alta avidez após 18 semanas não exclui infecção ocorrida no início da gestação. Correlacionar com sorologias anteriores, ultrassonografia e protocolo especializado.")
+        toxo_igg = resultado("Toxoplasma IgG / dye test", "toxo_igg")
+        toxo_igm = resultado("Toxoplasma IgM / ELISA", "toxo_igm")
+        if semanas <= 16:
+            avidez = st.selectbox("Avidez de IgG", ["Não realizada", "Baixa", "Intermediária", "Alta"], key="toxo_avidez_16")
+            st.info("Até 16 semanas: painel de referência = dye test IgG + ELISA IgM + avidez de IgG. Alta avidez praticamente exclui infecção aguda adquirida na gestação ou próxima à concepção, conforme método e momento da coleta.")
+            if toxo_igg.startswith("Negativo") and toxo_igm.startswith("Negativo"):
+                st.info("Gestante suscetível: orientar prevenção e seguimento conforme pré-natal.")
+            elif toxo_igg.startswith("Positivo") and toxo_igm.startswith("Negativo"):
+                st.success("Infecção anterior provável; sem evidência sorológica de infecção recente.")
+            elif toxo_igg.startswith("Positivo") and toxo_igm.startswith("Positivo") and avidez == "Alta":
+                st.success("Alta avidez ≤16 semanas: infecção aguda na gestação/próxima à concepção é muito improvável.")
+            elif toxo_igg.startswith("Positivo") and toxo_igm.startswith("Positivo") and avidez == "Baixa":
+                st.error("Baixa avidez ≤16 semanas: compatível com infecção primária relativamente recente; encaminhar imediatamente e iniciar discussão de tratamento.")
             else:
-                st.warning("IgG e IgM positivos com avidez não realizada/intermediária: resultado inconclusivo para datação. Repetir/confirmar em laboratório de referência e encaminhar.")
+                st.warning("Resultado ambíguo: confirmar em laboratório de referência; IgA e/ou IgE ELISA podem ser necessários.")
         else:
-            st.warning("Resultado inconclusivo; repetir e discutir com o serviço de pré-natal de alto risco.")
-        st.caption("A avidez deve ser interpretada pelo método e pelos limites do laboratório. Não iniciar, suspender ou trocar tratamento obstétrico somente por uma regra automática da calculadora.")
+            ac_hs = st.selectbox("Aglutinação diferencial AC/HS", ["Não realizada", "Agudo", "Não agudo", "Indeterminado"], key="toxo_ac_hs")
+            st.info("Após 16 semanas: usar dye test IgG + ELISA IgM + aglutinação diferencial AC/HS. Resultado agudo sugere infecção adquirida há <12 meses; não agudo sugere >12 meses. A avidez isolada perde utilidade nessa fase.")
+            if toxo_igg.startswith("Positivo") and toxo_igm.startswith("Positivo") and ac_hs == "Agudo":
+                st.error("Padrão sugere infecção adquirida nos últimos 12 meses: encaminhar imediatamente para obstetrícia/infectologia e iniciar tratamento conforme protocolo.")
+            elif ac_hs == "Não agudo" and toxo_igg.startswith("Positivo"):
+                st.success("Padrão favorece infecção com mais de 12 meses; correlacionar com sorologias anteriores e ultrassonografia.")
+            else:
+                st.warning("Resultado ambíguo: considerar IgA/IgE ELISA, amostras pareadas e laboratório de referência.")
+        st.markdown("**Conduta quando a infecção materna recente é provável (durante a gestação ou até 3 meses antes da concepção):**")
+        st.write("• Espiramicina: 1 g VO 3×/dia (ou 3 milhões UI 3×/dia) enquanto aguarda esclarecimento/PCR e conforme protocolo especializado; reduz transmissão, mas não trata adequadamente o feto.")
+        st.write("• Após cerca de 18 semanas ou se PCR do líquido amniótico for positivo: considerar pirimetamina + sulfadiazina + ácido folínico sob especialista. Não usar pirimetamina no primeiro trimestre sem decisão especializada.")
+        st.write("• Pirimetamina: ataque 50–100 mg no 1º dia; manutenção 25–50 mg/dia VO. Sulfadiazina: 1 g VO 3×/dia, com referência de 3 g/dia se <80 kg ou 4 g/dia se ≥80 kg. Ácido folínico: 10–25 mg/dia ou 50 mg semanal conforme protocolo.")
+        st.write("• Se pirimetamina indisponível: TMP-SMX + espiramicina + ácido folínico somente com infectologia/medicina fetal.")
+        st.write("• PCR em líquido amniótico: considerar a partir de ≥18 semanas e após intervalo adequado da infecção; amniocentese é procedimento especializado. Monitorar ultrassonografia fetal seriada, frequentemente mensal.")
+        st.warning("Um PCR negativo reduz a probabilidade, mas não exclui completamente infecção fetal; a manutenção da espiramicina e a mudança de esquema dependem do protocolo, data provável, PCR, ultrassonografia e especialista. As doses são referências e exigem confirmação local.")
 
     elif sorologia == "Citomegalovírus na gestação":
         st.subheader("Citomegalovírus na gestação — IgG, IgM e avidez")
@@ -1357,6 +1410,19 @@ elif modulo == "20. Injúria Renal Aguda — Urina e Eletrólitos":
         st.info("FENa entre 1–2%: zona intermediária; correlacionar com sedimento, tendência da creatinina, volemia, fármacos e imagem.")
     st.code("FENa (%) = 100 × (Na urinário × creatinina sérica) / (Na sérico × creatinina urinária)")
 
+    st.subheader("FEUreia — especialmente útil com diurético")
+    ureia_u = st.number_input("Ureia urinária (mg/dL)", 1.0, 2000.0, 500.0, key="ira_ureia_u")
+    ureia_s = st.number_input("Ureia sérica (mg/dL)", 1.0, 400.0, 80.0, key="ira_ureia_s")
+    feureia = 100 * (ureia_u * cr_s) / (ureia_s * cr_u) if ureia_s > 0 and cr_u > 0 else 0.0
+    st.metric("FEUreia", f"{feureia:.1f}%")
+    if feureia < 35:
+        st.info("FEUreia <35% pode favorecer padrão pré-renal, inclusive quando a FENa está artificialmente elevada por diurético; interpretar com contexto.")
+    elif feureia > 50:
+        st.warning("FEUreia >50% favorece lesão tubular/intrínseca, mas não é diagnóstico isolado.")
+    else:
+        st.info("FEUreia entre 35–50%: zona intermediária.")
+    st.code("FEUreia (%) = 100 × (ureia urinária × creatinina sérica) / (ureia sérica × creatinina urinária)")
+
     st.subheader("2. Densidade urinária")
     densidade = st.number_input("Densidade urinária", min_value=1.000, max_value=1.060, value=1.020, step=0.001, format="%.3f", key="ira_densidade")
     if densidade >= 1.020:
@@ -1408,64 +1474,76 @@ elif modulo == "20. Injúria Renal Aguda — Urina e Eletrólitos":
 # -----------------------------------------------------------------------------
 elif modulo == "21. Soro de Manutenção por Peso":
     st.header("💧 Soro de Manutenção por Peso")
-    st.caption("Cálculo conforme as metas informadas: 30 mL/kg/dia de água, 1 mEq/kg/dia de sódio, 1 mEq/kg/dia de potássio, 1 mEq/kg/dia de cloro e 100 g/kg/dia de glicose.")
-    st.warning("A meta de glicose de 100 g/kg/dia foi mantida exatamente como solicitada, mas é uma quantidade extremamente alta para manutenção e pode causar hiperglicemia/complicações. Confirmar a unidade e o protocolo antes de administrar; muitas referências usam metas em kcal/kg/dia ou GIR em mg/kg/min, não 100 g/kg/dia.")
+    st.caption("Adultos: volume de referência de 25–30 mL/kg/dia, individualizado. Pediatria: Holliday–Segar para volume horário e GIR para glicose; eletrólitos devem seguir idade, diurese, função renal e protocolo.")
+    faixa = st.radio("Grupo", ["Adulto", "Criança", "Recém-nascido/neonato — apenas GIR e referência"], horizontal=True, key="manut_grupo")
     peso_manut = st.number_input("Peso do paciente (kg)", min_value=0.5, max_value=300.0, value=70.0, step=0.1, key="manut_peso")
     frequencia = st.selectbox("Frequência de administração", ["6/6 horas", "8/8 horas", "12/12 horas", "24/24 horas"], key="manut_freq")
     tomadas_dia = {"6/6 horas": 4, "8/8 horas": 3, "12/12 horas": 2, "24/24 horas": 1}[frequencia]
 
-    # Metas diárias solicitadas
-    agua_dia = 30.0 * peso_manut
-    sodio_dia = 1.0 * peso_manut
-    potassio_dia = 1.0 * peso_manut
-    cloro_meta_dia = 1.0 * peso_manut
-    glicose_dia = 100.0 * peso_manut
+    if faixa == "Adulto":
+        agua_ml_kg_dia = st.number_input("Meta hídrica de referência (mL/kg/dia)", 20.0, 40.0, 30.0, step=1.0, key="adulto_agua_meta")
+        agua_dia = agua_ml_kg_dia * peso_manut
+        st.info("Em adultos, 25–30 mL/kg/dia é uma referência; reduzir ou individualizar em idosos, insuficiência cardíaca/renal, hiponatremia, edema, perdas e pós-operatório.")
+    elif faixa == "Criança":
+        # Holliday-Segar: 4/2/1 mL/kg/h; equivalently 100/50/20 mL/kg/day
+        agua_hora = 4.0 * min(peso_manut, 10.0) + 2.0 * min(max(peso_manut - 10.0, 0.0), 10.0) + 1.0 * max(peso_manut - 20.0, 0.0)
+        agua_dia = agua_hora * 24.0
+        st.info(f"Holliday–Segar: **{agua_hora:.1f} mL/h** e **{agua_dia:.1f} mL/dia**. Para muitas crianças hospitalizadas, usar solução isotônica com glicose e ajustar ao estado clínico; não acrescentar eletrólitos automaticamente.")
+    else:
+        agua_dia = st.number_input("Volume hídrico prescrito (mL/kg/dia)", 40.0, 180.0, 80.0, step=5.0, key="neo_agua_mlkg") * peso_manut
+        st.warning("Neonatos exigem cálculo por dia de vida, idade gestacional, peso, diurese e perdas insensíveis; não usar automaticamente a fórmula de adultos/crianças.")
 
-    # Apresentações solicitadas: NaCl 20% = 3,4 mEq Na/mL; K 19,1% = 2,5 mEq K/mL; SG 5% = 0,05 g/mL
-    nacl_m_eq_ml = 3.4
-    kcl_m_eq_ml = 2.5
-    sg5_g_ml = 0.05
-    nacl_ml_dia = sodio_dia / nacl_m_eq_ml
-    kcl_ml_dia = potassio_dia / kcl_m_eq_ml
-    sg5_ml_dia = glicose_dia / sg5_g_ml
-    cloro_da_nacl_dia = sodio_dia
-    cloro_do_kcl_dia = potassio_dia
-    cloro_total_dia = cloro_da_nacl_dia + cloro_do_kcl_dia
-    cloro_excesso_dia = cloro_total_dia - cloro_meta_dia
-    volume_total_dia = agua_dia
-    volume_hora = volume_total_dia / 24.0
+    st.subheader("Glicose — cálculo por GIR")
+    if faixa == "Adulto":
+        gir = st.number_input("GIR opcional (mg/kg/min); 0 = não calcular", 0.0, 10.0, 0.0, step=0.1, key="adulto_gir")
+        if gir == 0:
+            glicose_g_dia = 0.0
+            st.info("Para adulto, não inserir glicose de rotina sem indicação. Se desejado, informe GIR para calcular a quantidade correspondente.")
+        else:
+            glicose_g_dia = gir * peso_manut * 1440.0 / 1000.0
+    elif faixa == "Criança":
+        gir = st.number_input("GIR desejada (mg/kg/min)", 0.0, 12.0, 4.0, step=0.1, key="ped_gir")
+        glicose_g_dia = gir * peso_manut * 1440.0 / 1000.0
+        st.info("A GIR é a forma adequada de expressar aporte de glicose. A faixa depende da idade, jejum, doença e protocolo; ajustar pela glicemia.")
+    else:
+        gir = st.number_input("GIR de referência (mg/kg/min)", 0.0, 15.0, 5.0, step=0.1, key="neo_gir")
+        glicose_g_dia = gir * peso_manut * 1440.0 / 1000.0
+        st.info("Neonatos frequentemente necessitam GIR individualizada, com monitorização estreita de glicemia; este valor não substitui protocolo neonatal.")
 
-    st.subheader("Metas diárias")
-    col1, col2, col3 = st.columns(3)
-    with col1:
+    sodio_meta = st.number_input("Sódio alvo (mEq/kg/dia; 0 = não adicionar)", 0.0, 5.0, 1.0, step=0.1, key="manut_na_meta")
+    potassio_meta = st.number_input("Potássio alvo (mEq/kg/dia; 0 = não adicionar)", 0.0, 5.0, 1.0, step=0.1, key="manut_k_meta")
+    cloro_meta = st.number_input("Cloro alvo (mEq/kg/dia; apenas referência)", 0.0, 5.0, 1.0, step=0.1, key="manut_cl_meta")
+    sodio_dia = sodio_meta * peso_manut
+    potassio_dia = potassio_meta * peso_manut
+    cloro_meta_dia = cloro_meta * peso_manut
+    nacl_ml_dia = sodio_dia / 3.4
+    kcl_ml_dia = potassio_dia / 2.5
+    sg5_ml_dia = glicose_g_dia / 0.05
+    cloro_total_dia = sodio_dia + potassio_dia
+    volume_hora = agua_dia / 24.0
+
+    st.subheader("Metas calculadas")
+    c1,c2,c3=st.columns(3)
+    with c1:
         st.metric("Água", f"{agua_dia:.1f} mL/dia")
-        st.metric("Sódio", f"{sodio_dia:.1f} mEq/dia")
-    with col2:
-        st.metric("Potássio", f"{potassio_dia:.1f} mEq/dia")
-        st.metric("Cloro — meta", f"{cloro_meta_dia:.1f} mEq/dia")
-    with col3:
-        st.metric("Glicose solicitada", f"{glicose_dia:.1f} g/dia")
         st.metric("Velocidade hídrica", f"{volume_hora:.1f} mL/h")
+    with c2:
+        st.metric("Glicose", f"{glicose_g_dia:.1f} g/dia")
+        st.metric("GIR", f"{gir:.2f} mg/kg/min")
+    with c3:
+        st.metric("Sódio", f"{sodio_dia:.1f} mEq/dia")
+        st.metric("Potássio", f"{potassio_dia:.1f} mEq/dia")
 
     st.subheader("Volumes das apresentações")
-    st.write(f"**NaCl 20%:** {nacl_ml_dia:.2f} mL/dia para fornecer {sodio_dia:.1f} mEq de sódio (3,4 mEq/mL).")
-    st.write(f"**KCl 19,1%:** {kcl_ml_dia:.2f} mL/dia para fornecer {potassio_dia:.1f} mEq de potássio (2,5 mEq/mL).")
-    st.write(f"**Soro glicosado 5%:** {sg5_ml_dia:.1f} mL/dia para fornecer {glicose_dia:.1f} g de glicose (0,05 g/mL).")
-    st.write(f"**Volume hídrico de manutenção:** {volume_total_dia:.1f} mL/dia, equivalente a {volume_hora:.1f} mL/h.")
-
+    st.write(f"**NaCl 20%:** {nacl_ml_dia:.2f} mL/dia — 3,4 mEq de sódio/mL.")
+    st.write(f"**KCl 19,1%:** {kcl_ml_dia:.2f} mL/dia — 2,5 mEq de potássio/mL.")
+    st.write(f"**Soro glicosado 5%:** {sg5_ml_dia:.1f} mL/dia para fornecer {glicose_g_dia:.1f} g de glicose.")
     st.subheader(f"Divisão por administração — {frequencia}")
-    st.write(f"Número de administrações em 24 h: **{tomadas_dia}**")
     st.write(f"**Volume hídrico por administração:** {agua_dia / tomadas_dia:.1f} mL")
-    st.write(f"**NaCl 20% por administração:** {nacl_ml_dia / tomadas_dia:.2f} mL")
-    st.write(f"**KCl 19,1% por administração:** {kcl_ml_dia / tomadas_dia:.2f} mL")
-    st.write(f"**SG 5% por administração:** {sg5_ml_dia / tomadas_dia:.1f} mL")
-    st.write(f"**Sódio por administração:** {sodio_dia / tomadas_dia:.1f} mEq")
-    st.write(f"**Potássio por administração:** {potassio_dia / tomadas_dia:.1f} mEq")
-    st.write(f"**Glicose por administração:** {glicose_dia / tomadas_dia:.1f} g")
-
-    st.error(f"Atenção ao cloro: NaCl e KCl fornecem juntos aproximadamente {cloro_total_dia:.1f} mEq/dia de cloro, enquanto a meta informada foi {cloro_meta_dia:.1f} mEq/dia. Excesso calculado: {cloro_excesso_dia:.1f} mEq/dia. Com apenas NaCl e KCl não é possível atingir simultaneamente 1 mEq/kg/dia de sódio, 1 mEq/kg/dia de potássio e 1 mEq/kg/dia de cloro; ajustar a composição conforme eletrólitos séricos, função renal e protocolo.")
-    st.warning("Não adicionar KCl sem confirmar diurese, potássio sérico, função renal, compatibilidade, via e protocolo. O volume final real deve considerar o volume dos eletrólitos adicionados e a concentração final desejada. Este cálculo não substitui prescrição nem dupla checagem.")
-# -----------------------------------------------------------------------------
+    st.write(f"**NaCl 20%:** {nacl_ml_dia / tomadas_dia:.2f} mL | **KCl 19,1%:** {kcl_ml_dia / tomadas_dia:.2f} mL | **SG 5%:** {sg5_ml_dia / tomadas_dia:.1f} mL")
+    st.write(f"**Sódio:** {sodio_dia / tomadas_dia:.1f} mEq | **Potássio:** {potassio_dia / tomadas_dia:.1f} mEq | **Glicose:** {glicose_g_dia / tomadas_dia:.1f} g")
+    st.error(f"NaCl e KCl fornecem aproximadamente {cloro_total_dia:.1f} mEq/dia de cloro, enquanto a meta de referência informada é {cloro_meta_dia:.1f} mEq/dia. Ajustar composição e não tentar atingir eletrólitos automaticamente com ampolas concentradas.")
+    st.warning("KCl somente após confirmar diurese, potássio sérico, função renal, compatibilidade e via. O volume real da preparação deve incluir os aditivos. Conferir glicemia, osmolaridade, acesso e protocolo institucional.")
 # MÓDULO 12: DENGUE
 # -----------------------------------------------------------------------------
 elif modulo == "12. Dengue - Manejo Volêmico (MS)":
